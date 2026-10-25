@@ -11,7 +11,9 @@
   "scripts": {
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "server": "pnpm --filter @linksync/server dev"
+    "server": "pnpm --filter @linksync/server dev",
+    "firefox": "pnpm --filter @linksync/extension dev:firefox",
+    "chrome": "pnpm --filter @linksync/extension dev"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

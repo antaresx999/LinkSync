@@ -88,6 +88,11 @@ export class BookmarkTree {
     return this.layout().parentOf.get(id);
   }
 
+  /** IDs der direkten Kinder eines Ordners, sortiert. Schneller als children(). */
+  childIds(parentId: string): string[] {
+    return (this.layout().childrenOf.get(parentId) ?? []).map((r) => r.id);
+  }
+
   children(parentId: string): TreeNode[] {
     return (this.layout().childrenOf.get(parentId) ?? []).map((r) => this.toNode(r));
   }
