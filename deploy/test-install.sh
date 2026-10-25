@@ -48,7 +48,7 @@ pass "Server lauscht nur auf 127.0.0.1:8080"
 pass "Dienst läuft als eigener Benutzer"
 
 # Zweite Installation wird abgelehnt, statt etwas kaputt zu machen.
-bash "$INSTALL" install --file "$PACKAGE" | grep -q "bereits installiert" || fail "Doppelte Installation nicht erkannt"
+bash "$INSTALL" install --file "$PACKAGE" 2>&1 | grep -q "bereits installiert" || fail "Doppelte Installation nicht erkannt"
 pass "Doppelte Installation erkannt"
 
 # --- Daten anlegen ---
