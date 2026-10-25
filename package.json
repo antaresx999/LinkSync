@@ -12,7 +12,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "server": "pnpm --filter @linksync/server dev",
-    "firefox": "pnpm --filter @linksync/extension dev:firefox",
+    "firefox": "pnpm --filter @linksync/extension try:firefox",
     "chrome": "pnpm --filter @linksync/extension dev"
   },
   "devDependencies": {

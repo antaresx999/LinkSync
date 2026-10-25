@@ -10,7 +10,7 @@
    ```bash
    pnpm firefox
    ```
-   Es öffnet sich ein **separates** Firefox-Fenster mit eigenem Testprofil und installierter Erweiterung. Dein normales Firefox-Profil bleibt unberührt.
+   Es öffnet sich ein **separates** Firefox-Fenster mit einem frischen Testprofil und installierter Erweiterung. Dein normales Firefox-Profil bleibt unberührt. Beim Schliessen wird das Testprofil verworfen – beim nächsten Start einfach mit *Verbinden* und Sync-ID wieder anmelden.
 3. Auf das LinkSync-Symbol in der Symbolleiste klicken (evtl. über das Puzzle-Symbol ✱ anheften).
 4. **Neues Konto** → Passwort zweimal eingeben → *Konto anlegen*.
 5. Sync-ID kopieren und in einem zweiten Browser mit **Verbinden** verwenden.
