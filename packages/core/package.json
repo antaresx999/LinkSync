@@ -5,10 +5,15 @@
   "description": "Gemeinsamer Kern von LinkSync: Datenmodell, Verschlüsselung, Sync-Logik.",
   "license": "GPL-3.0-only",
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fractional-indexing": "^4.0.0"
   }
 }

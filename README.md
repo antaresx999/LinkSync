@@ -20,6 +20,7 @@ dessen Entwicklung eingestellt wurde. Danke an das xBrowserSync-Team für die Gr
 | `docs` | Planung und Dokumentation |
 
 Plan und Hintergründe: [docs/ANALYSE-UND-PLAN.md](docs/ANALYSE-UND-PLAN.md)
+Sync-Protokoll: [docs/PROTOKOLL.md](docs/PROTOKOLL.md)
 
 ## Entwickeln
 
