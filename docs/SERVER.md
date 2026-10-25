@@ -176,6 +176,24 @@ Linux-Installation: `/etc/linksync/linksync.env` (bearbeiten mit `sudo linksync 
 | `PORT` | `8080` | Port (1024 oder höher) |
 | `DATABASE_PATH` | `/data/linksync.sqlite` (Linux-Installation: `/var/lib/linksync/linksync.sqlite`) | Pfad zur Datenbank |
 
+## Fehlersuche: Erweiterung erreicht den Server nicht
+
+Zuerst auf dem Rechner prüfen, **auf dem der Browser läuft** (nicht auf dem Server):
+
+```bash
+curl https://sync.example.com/v1/info
+```
+
+| Ergebnis | Ursache und Lösung |
+|---|---|
+| `Could not resolve host` | Der Name ist im DNS dieses Rechners unbekannt. Häufig bei einem **internen DNS-Server**, der die eigene Domain selbst verwaltet (Split-DNS, z. B. Active Directory, Pi-hole, Router): Dort fehlt der Eintrag. Lösung: im internen DNS einen A-Eintrag (auf die öffentliche IP des Proxys oder die interne IP des Proxys) oder einen CNAME anlegen. |
+| HTML-Anmeldeseite statt JSON | Der Reverse-Proxy verlangt eine Anmeldung (z. B. Pangolin-SSO, Authelia). Die Erweiterung kann sich dort nicht anmelden. Lösung: Anmeldung für diese Ressource abschalten – LinkSync schützt die Daten selbst. |
+| `{"name":"LinkSync",…}` | Server erreichbar. Klappt es trotzdem nicht, LinkSync-Erweiterung auf Version 0.1.2 oder neuer aktualisieren. |
+
+**Pangolin:** Bei der Ressource die *Authentifizierung* (Platform SSO, Passwort, PIN) ausschalten. Ziel ist `http://<IP des LinkSync-Servers>:8080`. Pangolin setzt `X-Forwarded-For` selbst, `TRUST_PROXY=true` passt.
+
+**Direkt über die interne IP** (z. B. `http://10.0.0.5:8080`, ohne Proxy): Dafür in `/etc/linksync/linksync.env` `HOST=0.0.0.0` setzen. Die Verbindung ist dann unverschlüsselt – die Lesezeichen bleiben zwar verschlüsselt, das Anmelde-Token aber nicht. Nur im vertrauenswürdigen Heimnetz verwenden.
+
 ## Öffentlicher Betrieb – Checkliste
 
 - [ ] HTTPS aktiv (ohne HTTPS könnten Anmelde-Tokens mitgelesen werden)

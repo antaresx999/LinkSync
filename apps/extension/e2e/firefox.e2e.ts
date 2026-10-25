@@ -11,6 +11,7 @@
 import { execSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:path';
 import lzutf8 from 'lzutf8';
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
@@ -146,6 +147,17 @@ const xbs = await startFakeXbs(XBS_ID, 'xbs-passwort', [
 const a = await launch();
 const b = await launch();
 try {
+  // --- Server auch über die Netzwerk-IP erreichbar (nicht nur localhost) ---
+  // Firefox würde ohne eigene Sicherheitsrichtlinie http:// auf https:// umschreiben.
+  const lanIp = Object.values(networkInterfaces())
+    .flat()
+    .find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
+  if (lanIp) {
+    const lanUrl = SERVER.replace(/localhost|127\.0\.0\.1/, lanIp);
+    const status = await a.page.evaluate(async (u) => (await fetch(`${u}/v1/info`).catch(() => null))?.status ?? 0, lanUrl);
+    check(`Server über Netzwerk-IP erreichbar (${lanUrl})`, status, 200);
+  }
+
   // --- Firefox A: Lesezeichen anlegen, Konto erstellen ---
   await addBookmark(a.page, 'toolbar_____', 'Heise', 'https://www.heise.de/');
   const news = await addBookmark(a.page, 'toolbar_____', 'News');

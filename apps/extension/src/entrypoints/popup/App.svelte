@@ -16,6 +16,10 @@
   // Einrichten
   let mode = $state<'create' | 'connect'>('create');
   let serverUrl = $state('');
+  /** Unverschlüsselte Verbindung zu einem anderen Gerät als diesem? */
+  const insecureServer = $derived(
+    /^http:\/\//i.test(serverUrl.trim()) && !/^http:\/\/(localhost|127\.\d+\.\d+\.\d+|\[::1\])(:|\/|$)/i.test(serverUrl.trim()),
+  );
   let syncId = $state('');
   let password = $state('');
   let password2 = $state('');
@@ -167,6 +171,7 @@
           required
         />
       </label>
+      {#if insecureServer}<p class="warning">{t('httpWarning')}</p>{/if}
       <p class="hint">
         {t('serverHint')}
         <a href={SERVER_DOCS} target="_blank" rel="noopener">{t('serverHowTo')}</a>

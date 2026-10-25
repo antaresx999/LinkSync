@@ -31,6 +31,9 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     default_locale: 'en',
     permissions: ['bookmarks', 'storage', 'unlimitedStorage', 'alarms'],
+    // Eigene Sicherheitsrichtlinie: Firefox würde sonst jede http://-Adresse auf https:// umschreiben
+    // ("upgrade-insecure-requests") – Server im Heimnetz ohne HTTPS wären dann nicht erreichbar.
+    content_security_policy: { extension_pages: "script-src 'self'; object-src 'self';" },
     ...(browser === 'firefox'
       ? {
           browser_specific_settings: {
