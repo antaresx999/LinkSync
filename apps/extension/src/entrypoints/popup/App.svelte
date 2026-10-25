@@ -5,8 +5,8 @@
   import { send } from '../../lib/messages';
   import type { SearchResult, Status } from '../../lib/service';
 
-  // Standard-Server: beim Bauen über WXT_DEFAULT_SERVER festlegbar (siehe docs/FIREFOX-ADDONS.md).
-  const DEFAULT_SERVER: string = import.meta.env.WXT_DEFAULT_SERVER || 'http://localhost:8080';
+  /** Anleitung zum eigenen Server – es gibt keinen voreingestellten Server. */
+  const SERVER_DOCS = 'https://github.com/antaresx999/LinkSync/blob/main/docs/SERVER.md';
 
   let status = $state<Status | null>(null);
   let busy = $state(false);
@@ -15,7 +15,7 @@
 
   // Einrichten
   let mode = $state<'create' | 'connect'>('create');
-  let serverUrl = $state(DEFAULT_SERVER);
+  let serverUrl = $state('');
   let syncId = $state('');
   let password = $state('');
   let password2 = $state('');
@@ -156,8 +156,21 @@
 
       <label>
         {t('server')}
-        <input type="url" bind:value={serverUrl} required />
+        <input
+          name="server"
+          type="text"
+          inputmode="url"
+          autocapitalize="off"
+          spellcheck="false"
+          bind:value={serverUrl}
+          placeholder="https://sync.example.com"
+          required
+        />
       </label>
+      <p class="hint">
+        {t('serverHint')}
+        <a href={SERVER_DOCS} target="_blank" rel="noopener">{t('serverHowTo')}</a>
+      </p>
 
       {#if mode === 'connect'}
         <label>

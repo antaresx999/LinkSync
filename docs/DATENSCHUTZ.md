@@ -12,9 +12,9 @@ Stand: [DATUM]
 [ADRESSE]
 [E-MAIL]
 
-verantwortlich für den Sync-Server unter **[DOMAIN]**.
+Die Erweiterung hat **keinen voreingestellten Server**. Sie überträgt Daten nur an den Server, dessen Adresse du selbst einträgst. Für die Daten auf diesem Server ist dessen Betreiber verantwortlich – bei einem eigenen Server also du selbst.
 
-Wer LinkSync mit einem eigenen oder fremden Server nutzt, wendet sich an dessen Betreiber.
+[NUR FALLS DU SELBST EINEN SERVER FÜR ANDERE BETREIBST: Verantwortlich für den Sync-Server unter **[DOMAIN]** ist die oben genannte Stelle.]
 
 ## 2. Grundsatz: Ende-zu-Ende-Verschlüsselung
 

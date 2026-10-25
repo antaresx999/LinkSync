@@ -12,9 +12,9 @@ Last updated: [DATE]
 [ADDRESS]
 [EMAIL]
 
-responsible for the sync server at **[DOMAIN]**.
+The extension has **no built-in server**. It only sends data to the server whose address you enter yourself. The operator of that server is responsible for the data stored there – for your own server, that is you.
 
-If you use LinkSync with your own or another server, contact that server's operator.
+[ONLY IF YOU OPERATE A SERVER FOR OTHERS: The controller for the sync server at **[DOMAIN]** is the party named above.]
 
 ## 2. Principle: end-to-end encryption
 

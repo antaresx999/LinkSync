@@ -387,9 +387,18 @@ function newState(serverUrl: string, syncId: string, authToken: string, pending:
   };
 }
 
-function normalizeUrl(url: string): string {
-  const trimmed = url.trim().replace(/\/+$/, '');
-  if (!/^https?:\/\/[^\s/]+/.test(trimmed)) throw new UserError('errInvalidServer');
+/** Server-Adresse vereinheitlichen. Ohne Angabe wird https:// ergänzt. */
+export function normalizeUrl(url: string): string {
+  // Nur ein Schema ohne Adresse (z. B. "https://") ist keine Server-Adresse.
+  if (/^[a-z][a-z0-9+.-]*:\/*$/i.test(url.trim())) throw new UserError('errInvalidServer');
+  let trimmed = url.trim().replace(/\/+$/, '');
+  if (trimmed && !/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) trimmed = `https://${trimmed}`;
+  if (!/^https?:\/\/[^\s/?#]+/i.test(trimmed)) throw new UserError('errInvalidServer');
+  try {
+    new URL(trimmed);
+  } catch {
+    throw new UserError('errInvalidServer');
+  }
   return trimmed;
 }
 

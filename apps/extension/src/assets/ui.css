@@ -345,3 +345,7 @@ button.secondary.danger {
 .footer a {
   color: var(--accent);
 }
+
+.hint a {
+  color: var(--accent);
+}

@@ -20,6 +20,7 @@ const EXTENSION_ID = 'linksync@antaresx999.github.io';
 const UUID = '6c1f6a2e-0d1b-4c5e-9a57-1b2c3d4e5f60';
 const POPUP = `moz-extension://${UUID}/popup.html`;
 const PASSWORD = 'ein-langes-test-passwort';
+const SERVER = process.env.LINKSYNC_SERVER ?? 'http://localhost:8080';
 const shots = resolve(import.meta.dirname, 'screenshots');
 mkdirSync(shots, { recursive: true });
 
@@ -151,6 +152,8 @@ try {
   await addBookmark(a.page, news, 'NZZ', 'https://www.nzz.ch/');
   await addBookmark(a.page, 'menu________', 'Im Menü', 'https://example.com/menu');
 
+  // Kein voreingestellter Server: Adresse eintragen (ohne http:// würde https:// ergänzt).
+  await fill(a.page, 'input[name="server"]', SERVER);
   await fill(a.page, 'input[type="password"]', PASSWORD, 0);
   await fill(a.page, 'input[type="password"]', PASSWORD, 1);
   await click(a.page, 'button[type="submit"]');
@@ -162,6 +165,7 @@ try {
   await addBookmark(b.page, 'toolbar_____', 'Wird ersetzt', 'https://alt.example/');
   await click(b.page, '[role="tab"]:nth-child(2)');
   await b.page.waitForSelector('input[placeholder^="xxxx"]');
+  await fill(b.page, 'input[name="server"]', SERVER);
   await fill(b.page, 'input[placeholder^="xxxx"]', syncId);
   await fill(b.page, 'input[type="password"]', PASSWORD);
   await click(b.page, 'button[type="submit"]');

@@ -3,7 +3,7 @@ import { AuthError, MemoryServer, type SyncTransport } from '@linksync/core';
 import type { BrowserNode } from './bookmarks-api';
 import { FakeBookmarks } from './fake-bookmarks';
 import { setLanguage } from './i18n';
-import { SyncService, type ClientFactory, type ExtensionStorage, type StoredState } from './service';
+import { normalizeUrl, SyncService, type ClientFactory, type ExtensionStorage, type StoredState } from './service';
 
 /** Speicher im Arbeitsspeicher statt browser.storage / IndexedDB. */
 function memoryStorage() {
@@ -85,6 +85,16 @@ describe('SyncService', () => {
     await expect(b.service.connect('http://localhost:8080', syncId, 'falsch')).rejects.toThrow('Sync-ID oder Passwort falsch.');
     expect(await b.service.status()).toEqual({ configured: false });
     expect(b.bookmarks.outline('1')).toEqual(['Bleibt']);
+  });
+
+  it('vereinheitlicht Server-Adressen und ergänzt https://', () => {
+    expect(normalizeUrl('sync.example.com')).toBe('https://sync.example.com');
+    expect(normalizeUrl('  https://sync.example.com/ ')).toBe('https://sync.example.com');
+    expect(normalizeUrl('http://192.168.1.10:8080')).toBe('http://192.168.1.10:8080');
+    expect(normalizeUrl('example.com/linksync')).toBe('https://example.com/linksync');
+    for (const bad of ['', '   ', 'ftp://x.example', 'https://', 'mit leerzeichen.ch']) {
+      expect(() => normalizeUrl(bad), bad).toThrow('gültige Server-Adresse');
+    }
   });
 
   it('lehnt ungültige Server-Adressen ab', async () => {

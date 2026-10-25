@@ -12,7 +12,8 @@
    ```
    Es öffnet sich ein **separates** Firefox-Fenster mit einem frischen Testprofil und installierter Erweiterung. Dein normales Firefox-Profil bleibt unberührt. Beim Schliessen wird das Testprofil verworfen – beim nächsten Start einfach mit *Verbinden* und Sync-ID wieder anmelden.
 3. Auf das LinkSync-Symbol in der Symbolleiste klicken (evtl. über das Puzzle-Symbol ✱ anheften).
-4. **Neues Konto** → Passwort zweimal eingeben → *Konto anlegen*.
+4. **Neues Konto** → Server `http://localhost:8080` eintragen → Passwort zweimal eingeben → *Konto anlegen*.
+   Es gibt keinen voreingestellten Server: Im Alltag trägst du hier die Adresse deines eigenen Servers ein (z. B. `sync.example.com` – `https://` wird automatisch ergänzt).
 5. Sync-ID kopieren und in einem zweiten Browser mit **Verbinden** verwenden.
 
 ## Ausprobieren in Chrome, Edge oder Brave
