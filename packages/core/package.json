@@ -1,0 +1,14 @@
+{
+  "name": "@linksync/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Gemeinsamer Kern von LinkSync: Datenmodell, Verschlüsselung, Sync-Logik.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  }
+}
