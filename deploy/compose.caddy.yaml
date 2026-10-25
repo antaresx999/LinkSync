@@ -1,0 +1,34 @@
+# Variante B: Kein Reverse-Proxy vorhanden. Caddy übernimmt HTTPS automatisch (Let's Encrypt).
+# Voraussetzungen: Ports 80 und 443 sind frei und von aussen erreichbar, DOMAIN in .env gesetzt.
+#
+#   docker compose -f compose.caddy.yaml up -d
+services:
+  linksync:
+    image: ghcr.io/antaresx999/linksync-server:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TRUST_PROXY: "true"
+    volumes:
+      - linksync-data:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Bitte DOMAIN in .env setzen}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - linksync
+
+volumes:
+  linksync-data:
+  caddy-data:
+  caddy-config:

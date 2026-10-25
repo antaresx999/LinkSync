@@ -11,6 +11,7 @@ export interface Requests {
   connect: { request: { type: 'connect'; serverUrl: string; syncId: string; password: string }; response: Status };
   sync: { request: { type: 'sync' }; response: Status };
   disconnect: { request: { type: 'disconnect' }; response: Status };
+  deleteAccount: { request: { type: 'deleteAccount' }; response: Status };
   search: { request: { type: 'search'; query: string }; response: SearchResult[] };
   exportBackup: { request: { type: 'exportBackup' }; response: LinkSyncBackup };
   import: { request: { type: 'import'; roots: ImportRoots; replace: boolean }; response: ImportResult };

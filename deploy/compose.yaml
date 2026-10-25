@@ -1,0 +1,20 @@
+# Variante A: Du hast schon einen Reverse-Proxy (nginx, Traefik, Caddy …) mit HTTPS.
+# LinkSync lauscht nur lokal auf Port 8080; dein Proxy leitet https://deine-domain → http://127.0.0.1:8080 weiter.
+#
+#   docker compose up -d          starten
+#   docker compose pull && docker compose up -d   aktualisieren
+#   docker compose logs -f        Protokoll ansehen
+services:
+  linksync:
+    image: ghcr.io/antaresx999/linksync-server:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TRUST_PROXY: "true"
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - linksync-data:/data
+
+volumes:
+  linksync-data:

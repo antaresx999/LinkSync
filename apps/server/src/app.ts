@@ -6,6 +6,7 @@
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
@@ -19,6 +20,7 @@ import {
 } from '@linksync/core';
 import type { Config } from './config';
 import { RecordLimitError, type Database } from './db';
+import { RateLimiter } from './rate-limit';
 
 export const SERVER_VERSION = '0.1.0';
 const MAX_PULL_LIMIT = 1000;
@@ -28,13 +30,28 @@ const AUTH_TOKEN = /^[A-Za-z0-9_-]{20,200}$/;
 
 type Env = { Variables: { syncId: string } };
 
-export function createApp(db: Database, config: Config) {
+export interface AppOptions {
+  /** Nur für Tests: eigene Uhr für die Begrenzungen. */
+  now?: () => number;
+}
+
+export function createApp(db: Database, config: Config, options: AppOptions = {}) {
   const app = new Hono<Env>();
+  const requestLimiter = new RateLimiter(config.rateLimitPerMinute, 60_000, options.now);
+  const accountLimiter = new RateLimiter(config.newAccountsPerHour, 3_600_000, options.now);
 
   app.use('*', secureHeaders());
   // Erweiterungen und Apps rufen den Server von eigenen "Adressen" aus auf.
   app.use('/v1/*', cors({ origin: '*', allowHeaders: ['Authorization', 'Content-Type'], maxAge: 86400 }));
   app.use('/v1/*', bodyLimit({ maxSize: 12 * 1024 * 1024, onError: (c) => error(c, 413, 'Anfrage zu gross') }));
+
+  // Begrenzung pro IP-Adresse gegen Missbrauch.
+  app.use('/v1/*', async (c, next) => {
+    if (c.req.method === 'OPTIONS') return next();
+    const wait = requestLimiter.hit(clientIp(c, config.trustProxy));
+    if (wait > 0) return tooMany(c, wait);
+    await next();
+  });
 
   app.get('/health', (c) => c.text('ok'));
 
@@ -46,6 +63,7 @@ export function createApp(db: Database, config: Config) {
       allowNewAccounts: config.allowNewAccounts,
       maxRecordsPerAccount: config.maxRecordsPerAccount,
       message: config.message,
+      deleteInactiveAfterDays: config.deleteInactiveAfterDays,
     };
     return c.json(info);
   });
@@ -53,6 +71,11 @@ export function createApp(db: Database, config: Config) {
   // Konto anlegen. Das Gerät schickt sein Anmelde-Token, der Server speichert nur den Hash.
   app.post('/v1/accounts', async (c) => {
     if (!config.allowNewAccounts) return error(c, 403, 'Dieser Server nimmt keine neuen Konten an');
+    if (config.maxAccounts > 0 && db.countAccounts() >= config.maxAccounts) {
+      return error(c, 403, 'Dieser Server ist voll und nimmt keine neuen Konten an');
+    }
+    const wait = accountLimiter.hit(clientIp(c, config.trustProxy));
+    if (wait > 0) return tooMany(c, wait);
     const token = bearerToken(c);
     if (!token) return error(c, 401, 'Anmelde-Token fehlt');
     const body = await readJson(c);
@@ -117,6 +140,27 @@ export function createApp(db: Database, config: Config) {
 }
 
 // ---------- Hilfsfunktionen ----------
+
+/**
+ * IP-Adresse des Geräts. Hinter einem Reverse-Proxy steht sie in X-Forwarded-For;
+ * der letzte Eintrag ist der, den unser eigener Proxy hinzugefügt hat.
+ */
+function clientIp(c: Context, trustProxy: boolean): string {
+  if (trustProxy) {
+    const forwarded = c.req.header('X-Forwarded-For')?.split(',').map((s) => s.trim()).filter(Boolean);
+    if (forwarded?.length) return forwarded[forwarded.length - 1]!;
+  }
+  try {
+    return getConnInfo(c).remote.address ?? 'unbekannt';
+  } catch {
+    return 'unbekannt';
+  }
+}
+
+function tooMany(c: Context, seconds: number) {
+  c.header('Retry-After', String(seconds));
+  return c.json({ error: `Zu viele Anfragen. Bitte in ${seconds} Sekunden erneut versuchen.` }, 429);
+}
 
 function error(c: Context, status: 400 | 401 | 403 | 404 | 409 | 413 | 500, message: string) {
   return c.json({ error: message }, status);

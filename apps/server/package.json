@@ -6,7 +6,7 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "NEW_ACCOUNTS_PER_HOUR=0 RATE_LIMIT_PER_MINUTE=0 tsx watch src/main.ts",
     "start": "node dist/main.js",
     "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/main.js",
     "test": "vitest run",

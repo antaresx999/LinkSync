@@ -1,0 +1,12 @@
+# Server-Image aus dem Quellcode bauen und lokal starten (zum Testen des Dockerfiles).
+#   docker compose -f compose.dev.yaml up --build
+services:
+  linksync:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      NEW_ACCOUNTS_PER_HOUR: "0"
+      RATE_LIMIT_PER_MINUTE: "0"

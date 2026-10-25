@@ -75,6 +75,12 @@ const de = {
   connectBackupTitle: 'Lesezeichen vor dem Verbinden',
   connectBackupIntro: 'Beim Verbinden am {date} wurden die Lesezeichen dieses Browsers ersetzt. Hier kannst du sie zusätzlich übernehmen.',
   connectBackupButton: 'Alte Lesezeichen übernehmen',
+  deleteTitle: 'Konto löschen',
+  deleteIntro: 'Löscht dein Konto und alle verschlüsselten Lesezeichen endgültig vom Server. Die Lesezeichen in diesem Browser bleiben erhalten. Andere verbundene Browser können danach nicht mehr synchronisieren.',
+  deleteButton: 'Konto und Daten auf dem Server löschen',
+  deleteConfirm: 'Konto und alle Daten auf dem Server endgültig löschen? Das lässt sich nicht rückgängig machen.',
+  deleteDone: 'Konto gelöscht. Die Lesezeichen in diesem Browser sind erhalten geblieben.',
+  privacy: 'Datenschutz',
 
   // Fehler
   errInvalidServer: 'Bitte eine gültige Server-Adresse eingeben, z. B. https://sync.example.com',
@@ -164,6 +170,12 @@ const en: Dictionary = {
   connectBackupTitle: 'Bookmarks from before connecting',
   connectBackupIntro: "When connecting on {date}, this browser's bookmarks were replaced. You can add them back here.",
   connectBackupButton: 'Add old bookmarks',
+  deleteTitle: 'Delete account',
+  deleteIntro: 'Permanently deletes your account and all encrypted bookmarks from the server. The bookmarks in this browser are kept. Other connected browsers can no longer sync.',
+  deleteButton: 'Delete account and data on the server',
+  deleteConfirm: 'Permanently delete the account and all data on the server? This cannot be undone.',
+  deleteDone: 'Account deleted. The bookmarks in this browser have been kept.',
+  privacy: 'Privacy',
 
   errInvalidServer: 'Please enter a valid server address, e.g. https://sync.example.com',
   errAuth: 'Wrong sync ID or password.',

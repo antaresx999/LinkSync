@@ -87,6 +87,15 @@ export class Database {
     this.db.prepare('UPDATE accounts SET last_used_at = ? WHERE sync_id = ?').run(now, syncId);
   }
 
+  countAccounts(): number {
+    return (this.db.prepare('SELECT COUNT(*) AS n FROM accounts').get() as { n: number }).n;
+  }
+
+  /** Konten löschen, die seit "before" (Millisekunden) nicht benutzt wurden. Gibt die Anzahl zurück. */
+  deleteInactiveAccounts(before: number): number {
+    return Number(this.db.prepare('DELETE FROM accounts WHERE last_used_at < ?').run(before).changes);
+  }
+
   countRecords(syncId: string): number {
     const row = this.db.prepare('SELECT COUNT(*) AS n FROM records WHERE sync_id = ?').get(syncId) as { n: number };
     return row.n;

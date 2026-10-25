@@ -87,6 +87,8 @@ export default defineBackground(() => {
         return service.sync();
       case 'disconnect':
         return service.disconnect();
+      case 'deleteAccount':
+        return service.deleteAccount();
       case 'search':
         return service.search(request.query);
       case 'exportBackup':

@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'wxt';
 
 // Nur für den automatischen Firefox-Test: eigener Ausgabeordner, Popup öffnet sich nach der Installation.
@@ -8,6 +9,23 @@ export default defineConfig({
   srcDir: 'src',
   ...(e2e ? { outDirTemplate: '{{browser}}-mv{{manifestVersion}}-e2e' } : {}),
   modules: ['@wxt-dev/module-svelte'],
+  // Pakete für die Stores. Mozilla verlangt zusätzlich den Quellcode – inklusive des gemeinsamen Kerns.
+  zip: {
+    artifactTemplate: 'linksync-{{version}}-{{browser}}.zip',
+    sourcesTemplate: 'linksync-{{version}}-sources.zip',
+    sourcesRoot: resolve(import.meta.dirname, '../..'),
+    includeSources: [
+      'package.json',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'tsconfig.base.json',
+      'LICENSE',
+      'README.md',
+      'packages/core/**',
+      'apps/extension/**',
+    ],
+    excludeSources: ['**/node_modules/**', '**/.output/**', '**/.wxt/**', '**/e2e/screenshots/**', '**/*.env*'],
+  },
   manifest: ({ browser }) => ({
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',

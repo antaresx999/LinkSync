@@ -9,10 +9,25 @@ const config = loadConfig();
 const db = new Database(config.databasePath);
 const app = createApp(db, config);
 
+// Unbenutzte Konten aufräumen (falls eingeschaltet): beim Start und dann täglich.
+const DAY = 24 * 60 * 60 * 1000;
+function cleanup() {
+  if (config.deleteInactiveAfterDays <= 0) return;
+  const removed = db.deleteInactiveAccounts(Date.now() - config.deleteInactiveAfterDays * DAY);
+  if (removed > 0) console.log(`${removed} unbenutzte Konten gelöscht.`);
+}
+cleanup();
+const cleanupTimer = setInterval(cleanup, DAY);
+cleanupTimer.unref();
+
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`LinkSync-Server ${SERVER_VERSION} läuft auf http://localhost:${info.port}`);
   console.log(`Datenbank: ${config.databasePath}`);
   console.log(`Neue Konten erlaubt: ${config.allowNewAccounts ? 'ja' : 'nein'}`);
+  console.log(`Hinter Reverse-Proxy: ${config.trustProxy ? 'ja' : 'nein'}`);
+  if (config.deleteInactiveAfterDays > 0) {
+    console.log(`Unbenutzte Konten werden nach ${config.deleteInactiveAfterDays} Tagen gelöscht.`);
+  }
 });
 
 // Sauber beenden (z. B. bei Ctrl-C oder "docker stop").

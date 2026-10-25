@@ -37,6 +37,8 @@ export interface ServerInfo {
   maxRecordsPerAccount: number;
   /** Hinweis des Server-Betreibers, kann leer sein. */
   message: string;
+  /** Konten, die so viele Tage nicht benutzt wurden, werden gelöscht (0 = nie). */
+  deleteInactiveAfterDays?: number;
 }
 
 export interface EncryptedRecord {

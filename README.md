@@ -1,5 +1,7 @@
 # LinkSync
 
+[![CI](https://github.com/antaresx999/LinkSync/actions/workflows/ci.yml/badge.svg)](https://github.com/antaresx999/LinkSync/actions/workflows/ci.yml)
+
 Ende-zu-Ende verschlüsselter Lesezeichen-Sync für Chrome, Edge, Brave, Firefox und mehr.
 Deine Lesezeichen werden auf deinem Gerät verschlüsselt. Der Server sieht nie, was du speicherst.
 
@@ -19,8 +21,16 @@ dessen Entwicklung eingestellt wurde. Danke an das xBrowserSync-Team für die Gr
 | `apps/server` | Sync-Server, siehe [docs/SERVER.md](docs/SERVER.md) |
 | `docs` | Planung und Dokumentation |
 
-Plan und Hintergründe: [docs/ANALYSE-UND-PLAN.md](docs/ANALYSE-UND-PLAN.md)
-Sync-Protokoll: [docs/PROTOKOLL.md](docs/PROTOKOLL.md)
+## Dokumentation
+
+| Thema | Datei |
+|---|---|
+| Erweiterung ausprobieren und nutzen | [docs/ERWEITERUNG.md](docs/ERWEITERUNG.md) |
+| Eigenen Server betreiben (Docker) | [docs/SERVER.md](docs/SERVER.md) |
+| Veröffentlichung auf Firefox Add-ons | [docs/FIREFOX-ADDONS.md](docs/FIREFOX-ADDONS.md) |
+| Datenschutz | [Deutsch](docs/DATENSCHUTZ.md) · [English](docs/PRIVACY.md) |
+| Sync-Protokoll und Verschlüsselung | [docs/PROTOKOLL.md](docs/PROTOKOLL.md) |
+| Ursprünglicher Plan | [docs/ANALYSE-UND-PLAN.md](docs/ANALYSE-UND-PLAN.md) |
 
 ## Entwickeln
 

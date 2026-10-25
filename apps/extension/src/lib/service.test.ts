@@ -29,6 +29,10 @@ function fakeServer() {
   const factory: ClientFactory = () => ({
     getInfo: async () => ({ name: 'LinkSync', version: 'test', protocol: 1, allowNewAccounts: true, maxRecordsPerAccount: 1e6, message: '' }),
     createAccount: async (syncId, token) => void accounts.set(syncId, { token, server: new MemoryServer() }),
+    deleteAccount: async (syncId, token) => {
+      if (accounts.get(syncId)?.token !== token) throw new AuthError();
+      accounts.delete(syncId);
+    },
     transport: (syncId, token): SyncTransport => {
       const check = () => {
         const account = accounts.get(syncId);
@@ -118,6 +122,19 @@ describe('SyncService', () => {
     online = true;
     await a.service.sync();
     expect(await a.service.status()).toMatchObject({ lastError: null, bookmarkCount: 1 });
+  });
+
+  it('löscht das Konto auf dem Server; andere Browser können danach nicht mehr synchronisieren', async () => {
+    const factory = fakeServer();
+    const a = makeService(factory);
+    await a.bookmarks.create({ parentId: '1', title: 'Bleibt lokal', url: 'https://bleibt' });
+    const status = await a.service.createAccount('http://localhost:8080', 'pw');
+    const b = makeService(factory);
+    await b.service.connect('http://localhost:8080', status.configured ? status.syncId : '', 'pw');
+
+    expect(await a.service.deleteAccount()).toEqual({ configured: false });
+    expect(a.bookmarks.outline('1')).toEqual(['Bleibt lokal']);
+    await expect(b.service.sync()).rejects.toThrow('Sync-ID oder Passwort falsch.');
   });
 
   it('trennt die Verbindung, ohne Lesezeichen zu löschen', async () => {

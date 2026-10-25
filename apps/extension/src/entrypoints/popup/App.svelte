@@ -5,7 +5,8 @@
   import { send } from '../../lib/messages';
   import type { SearchResult, Status } from '../../lib/service';
 
-  const DEFAULT_SERVER = 'http://localhost:8080';
+  // Standard-Server: beim Bauen über WXT_DEFAULT_SERVER festlegbar (siehe docs/FIREFOX-ADDONS.md).
+  const DEFAULT_SERVER: string = import.meta.env.WXT_DEFAULT_SERVER || 'http://localhost:8080';
 
   let status = $state<Status | null>(null);
   let busy = $state(false);

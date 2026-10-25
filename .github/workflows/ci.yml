@@ -1,0 +1,132 @@
+# Automatische Prüfungen bei jedem Push und Pull Request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests, Typprüfung, Build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Erweiterung bauen
+        run: |
+          pnpm --filter @linksync/extension zip:chrome
+          pnpm --filter @linksync/extension zip:firefox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: apps/extension/.output/*.zip
+
+  e2e:
+    name: Ende-zu-Ende in Firefox
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Firefox installieren
+        uses: browser-actions/setup-firefox@v1
+        id: firefox
+        with:
+          firefox-version: latest
+      - name: Server starten
+        run: |
+          NEW_ACCOUNTS_PER_HOUR=0 RATE_LIMIT_PER_MINUTE=0 DATABASE_PATH=/tmp/ls.sqlite \
+            pnpm --filter @linksync/server exec tsx src/main.ts &
+          for i in $(seq 1 30); do curl -fs localhost:8080/health && break; sleep 1; done
+      - name: Zwei Firefox-Instanzen synchronisieren
+        run: pnpm --filter @linksync/extension e2e:firefox
+        env:
+          FIREFOX_PATH: ${{ steps.firefox.outputs.firefox-path }}
+
+  docker:
+    name: Docker-Image
+    runs-on: ubuntu-24.04
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/linksync-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Image bauen (zum Testen)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          load: true
+          tags: linksync-server:test
+      - name: Container starten und Rauchtest
+        run: |
+          docker run -d --name ls -p 8080:8080 -e NEW_ACCOUNTS_PER_HOUR=0 linksync-server:test
+          for i in $(seq 1 30); do curl -fs localhost:8080/health && break; sleep 1; done
+          corepack enable && pnpm install --frozen-lockfile --filter @linksync/server...
+          pnpm --filter @linksync/server smoke http://localhost:8080
+          docker logs ls
+      - name: Bei GitHub anmelden
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tags festlegen
+        if: github.event_name == 'push'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=sha,format=short
+      - name: Image für amd64 und arm64 veröffentlichen
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    name: GitHub-Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    needs: [test, e2e, docker]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension
+      - name: Release mit Erweiterungs-Paketen anlegen
+        run: gh release create "$GITHUB_REF_NAME" *.zip --repo "$GITHUB_REPOSITORY" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

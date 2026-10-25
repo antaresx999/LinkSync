@@ -31,6 +31,9 @@
 
   let backupMessage = $state<{ ok: boolean; text: string } | null>(null);
   let connectMessage = $state<{ ok: boolean; text: string } | null>(null);
+  let deleteMessage = $state<{ ok: boolean; text: string } | null>(null);
+
+  const PRIVACY_URL = 'https://github.com/antaresx999/LinkSync/blob/main/docs/DATENSCHUTZ.md';
 
   onMount(() => {
     document.documentElement.lang = getLanguage();
@@ -123,6 +126,20 @@
     }
   }
 
+  async function deleteAccount() {
+    if (!confirm(t('deleteConfirm'))) return;
+    busy = true;
+    deleteMessage = null;
+    try {
+      status = await send({ type: 'deleteAccount' });
+      deleteMessage = { ok: true, text: t('deleteDone') };
+    } catch (err) {
+      deleteMessage = failed(err);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function restoreConnectBackup() {
     busy = true;
     connectMessage = null;
@@ -161,6 +178,7 @@
   {#if status === null}
     <p class="muted">{t('loading')}</p>
   {:else if !status.configured}
+    {@render feedback(deleteMessage)}
     <p class="warning">{t('notConfigured')}</p>
   {:else}
     <section>
@@ -227,5 +245,16 @@
         {@render feedback(connectMessage)}
       </section>
     {/if}
+
+    <section>
+      <h2>{t('deleteTitle')}</h2>
+      <p class="muted">{t('deleteIntro')}</p>
+      <div class="buttons">
+        <button class="secondary danger" disabled={busy} onclick={deleteAccount}>{t('deleteButton')}</button>
+      </div>
+      {@render feedback(deleteMessage)}
+    </section>
   {/if}
+
+  <p class="hint footer"><a href={PRIVACY_URL} target="_blank" rel="noopener">{t('privacy')}</a> · GPL-3.0</p>
 </main>

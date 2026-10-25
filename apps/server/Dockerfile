@@ -15,6 +15,9 @@ RUN pnpm --filter @linksync/server build
 
 # 2. Schritt: schlankes Abbild nur mit dem Ergebnis
 FROM node:24-alpine
+LABEL org.opencontainers.image.source="https://github.com/antaresx999/LinkSync" \
+      org.opencontainers.image.description="LinkSync-Server: Ende-zu-Ende verschlüsselter Lesezeichen-Sync" \
+      org.opencontainers.image.licenses="GPL-3.0-only"
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \

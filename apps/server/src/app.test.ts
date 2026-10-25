@@ -19,9 +19,9 @@ import { Database } from './db';
 
 const SERVER = 'http://linksync.test';
 
-function setup(overrides: Partial<Config> = {}, db = new Database(':memory:')) {
-  const config = { ...loadConfig({}), ...overrides };
-  const app = createApp(db, config);
+function setup(overrides: Partial<Config> = {}, db = new Database(':memory:'), now?: () => number) {
+  const config = { ...loadConfig({}), newAccountsPerHour: 0, ...overrides };
+  const app = createApp(db, config, { now });
   // Statt über das Netzwerk direkt an die App schicken.
   const client = new LinkSyncClient(SERVER, async (url, init) => app.fetch(new Request(url, init)));
   const raw = async (path: string, init?: RequestInit) => app.fetch(new Request(SERVER + path, init));
@@ -231,5 +231,77 @@ describe('Datenbankdatei', () => {
     const second = setup({}, new Database(path));
     expect((await second.client.transport(syncId, keys.authToken).pull(0)).records).toHaveLength(1);
     second.db.close();
+  });
+});
+
+describe('Schutz vor Missbrauch', () => {
+  const fromIp = (ip: string) => ({ headers: { 'X-Forwarded-For': `203.0.113.9, ${ip}` } });
+
+  it('begrenzt Anfragen pro Minute und IP-Adresse', async () => {
+    let now = 0;
+    const { raw } = setup({ rateLimitPerMinute: 3, trustProxy: true }, undefined, () => now);
+    for (let i = 0; i < 3; i++) expect((await raw('/v1/info', fromIp('198.51.100.1'))).status).toBe(200);
+    const blocked = await raw('/v1/info', fromIp('198.51.100.1'));
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0);
+    // Andere Adresse ist nicht betroffen, nach einer Minute geht es wieder.
+    expect((await raw('/v1/info', fromIp('198.51.100.2'))).status).toBe(200);
+    now += 61_000;
+    expect((await raw('/v1/info', fromIp('198.51.100.1'))).status).toBe(200);
+  });
+
+  it('begrenzt neue Konten pro Stunde und IP-Adresse', async () => {
+    const { raw } = setup({ newAccountsPerHour: 2, trustProxy: true });
+    const create = async () => {
+      const id = createId();
+      const token = (await deriveKeys(id, 'pw', 1000)).authToken;
+      return raw('/v1/accounts', {
+        method: 'POST',
+        headers: { 'X-Forwarded-For': '198.51.100.7', Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncId: id }),
+      });
+    };
+    expect((await create()).status).toBe(201);
+    expect((await create()).status).toBe(201);
+    expect((await create()).status).toBe(429);
+  });
+
+  it('vertraut X-Forwarded-For nur, wenn ein Reverse-Proxy eingestellt ist', async () => {
+    const { raw } = setup({ rateLimitPerMinute: 1, trustProxy: false });
+    expect((await raw('/v1/info', fromIp('198.51.100.1'))).status).toBe(200);
+    // Gefälschte Adresse hilft nicht: Ohne Proxy-Einstellung zählt die echte Verbindung.
+    expect((await raw('/v1/info', fromIp('198.51.100.99'))).status).toBe(429);
+  });
+
+  it('nimmt keine Konten mehr an, wenn der Server voll ist', async () => {
+    const { client } = setup({ maxAccounts: 1 });
+    await client.createAccount(syncId, keys.authToken);
+    const other = createId();
+    await expect(client.createAccount(other, (await deriveKeys(other, 'x', 1000)).authToken)).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('meldet die Aufräum-Einstellung in /v1/info', async () => {
+    const { client } = setup({ deleteInactiveAfterDays: 365 });
+    expect(await client.getInfo()).toMatchObject({ deleteInactiveAfterDays: 365 });
+  });
+});
+
+describe('Unbenutzte Konten', () => {
+  it('werden nach der eingestellten Zeit gelöscht, benutzte bleiben', () => {
+    const db = new Database(':memory:');
+    db.createAccount('alt', 'h', 1_000);
+    db.createAccount('neu', 'h', 1_000);
+    db.touchAccount('neu', 50_000);
+    expect(db.deleteInactiveAccounts(10_000)).toBe(1);
+    expect(db.getAccount('alt')).toBeUndefined();
+    expect(db.getAccount('neu')).toBeDefined();
+  });
+});
+
+describe('Konfiguration', () => {
+  it('liest Umgebungsvariablen und lehnt Unsinn ab', () => {
+    expect(loadConfig({ TRUST_PROXY: 'ja', RATE_LIMIT_PER_MINUTE: '0' })).toMatchObject({ trustProxy: true, rateLimitPerMinute: 0 });
+    expect(() => loadConfig({ PORT: 'abc' })).toThrow();
+    expect(() => loadConfig({ TRUST_PROXY: 'vielleicht' })).toThrow();
   });
 });

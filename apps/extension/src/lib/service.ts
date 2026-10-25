@@ -77,7 +77,9 @@ export interface ExtensionStorage {
   loadBackup(): Promise<BrowserBackup | undefined>;
 }
 
-export type ClientFactory = (serverUrl: string) => Pick<LinkSyncClient, 'getInfo' | 'createAccount' | 'transport'>;
+export type ClientFactory = (
+  serverUrl: string,
+) => Pick<LinkSyncClient, 'getInfo' | 'createAccount' | 'deleteAccount' | 'transport'>;
 
 export type Status =
   | { configured: false }
@@ -181,6 +183,23 @@ export class SyncService {
   /** Verbindung trennen. Die Lesezeichen im Browser bleiben, wie sie sind. */
   disconnect(): Promise<Status> {
     return this.exclusive(async () => {
+      await this.options.storage.clearState();
+      await this.options.storage.clearKey();
+      return this.status();
+    });
+  }
+
+  /**
+   * Konto mit allen Daten auf dem Server löschen und die Verbindung trennen.
+   * Die Lesezeichen in diesem Browser bleiben erhalten. Andere verbundene
+   * Browser können danach nicht mehr synchronisieren.
+   */
+  deleteAccount(): Promise<Status> {
+    return this.exclusive(async () => {
+      const state = await this.options.storage.loadState();
+      if (!state) throw new UserError('errNotConfigured');
+      const client = this.options.clientFactory(state.serverUrl);
+      await friendly(state.serverUrl, () => client.deleteAccount(state.syncId, state.authToken));
       await this.options.storage.clearState();
       await this.options.storage.clearKey();
       return this.status();
