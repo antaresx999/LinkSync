@@ -7,7 +7,7 @@
  */
 
 import { decryptRecord, encryptRecord } from './crypto';
-import { MAX_PUSH_RECORDS, type SyncTransport } from './protocol';
+import { MAX_PUSH_RECORDS, MAX_RECORD_DATA_LENGTH, type SyncTransport } from './protocol';
 import type { ItemRecord } from './model';
 import type { BookmarkTree } from './tree';
 
@@ -28,6 +28,8 @@ export interface SyncResult {
   sent: number;
   /** Einträge, die nicht entschlüsselt werden konnten (sollte nie vorkommen). */
   failed: string[];
+  /** Einträge, die zu gross für den Server sind (z. B. extrem lange URL). Sie bleiben nur lokal. */
+  tooLarge: string[];
 }
 
 export class SyncConflictError extends Error {
@@ -54,12 +56,12 @@ export class SyncEngine {
   }
 
   async sync(): Promise<SyncResult> {
-    const result: SyncResult = { received: 0, sent: 0, failed: [] };
+    const result: SyncResult = { received: 0, sent: 0, failed: [], tooLarge: [] };
 
     for (let round = 0; round < MAX_ROUNDS; round++) {
       await this.pullAll(result);
 
-      const dirty = this.tree.getDirty();
+      const dirty = this.tree.getDirty().filter((r) => !result.tooLarge.includes(r.id));
       if (dirty.length === 0) return result;
 
       let hadConflict = false;
@@ -96,13 +98,19 @@ export class SyncEngine {
 
   /** Gibt true zurück, wenn es Konflikte gab. */
   private async pushBatch(batch: ItemRecord[], result: SyncResult): Promise<boolean> {
-    const records = await Promise.all(
+    const encrypted = await Promise.all(
       batch.map(async (r) => ({
         id: r.id,
         baseSeq: this.state.seqs[r.id] ?? 0,
         data: await encryptRecord(this.key, r),
       })),
     );
+    const records = encrypted.filter((r) => {
+      if (r.data.length <= MAX_RECORD_DATA_LENGTH) return true;
+      result.tooLarge.push(r.id);
+      return false;
+    });
+    if (records.length === 0) return false;
     const response = await this.transport.push({ records });
     const sentById = new Map(batch.map((r) => [r.id, r]));
     for (const { id, seq } of response.accepted) {

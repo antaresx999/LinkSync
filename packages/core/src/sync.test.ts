@@ -132,7 +132,17 @@ describe('Sync zwischen zwei Geräten', () => {
     const a = device(server, 'a');
     a.tree.addBookmark('toolbar', 'X', 'https://x');
     await a.sync();
-    expect(await a.sync()).toEqual({ received: 0, sent: 0, failed: [] });
+    expect(await a.sync()).toEqual({ received: 0, sent: 0, failed: [], tooLarge: [] });
+  });
+
+  it('überspringt zu grosse Einträge, ohne den restlichen Sync zu blockieren', async () => {
+    const server = new MemoryServer();
+    const a = device(server, 'a');
+    const huge = a.tree.addBookmark('toolbar', 'Riesig', 'data:text/plain,' + 'x'.repeat(20_000));
+    a.tree.addBookmark('toolbar', 'Normal', 'https://normal');
+    const result = await a.sync();
+    expect(result.tooLarge).toEqual([huge]);
+    expect(result.sent).toBe(1);
   });
 
   it('speichert auf dem Server nur verschlüsselte Daten', async () => {
@@ -166,6 +176,6 @@ describe('Sync zwischen zwei Geräten', () => {
     // Gerät A "neu starten": Einträge und Sync-Zustand aus dem Speicher laden.
     const restoredTree = new BookmarkTree(new Clock('a', undefined, () => now), a.tree.allRecords());
     const restored = new SyncEngine(restoredTree, key, server.transport(), a.engine.getState());
-    expect(await restored.sync()).toEqual({ received: 0, sent: 0, failed: [] });
+    expect(await restored.sync()).toEqual({ received: 0, sent: 0, failed: [], tooLarge: [] });
   });
 });

@@ -14,7 +14,8 @@
  * Der Server sieht nur IDs, Nummern und verschlüsselte Daten.
  *
  * HTTP-Schnittstelle (Anmeldung per "Authorization: Bearer <authToken>"):
- *   POST /v1/accounts                { syncId, authTokenHash } → 201
+ *   GET  /v1/info                                            → ServerInfo
+ *   POST /v1/accounts                { syncId }              → 201 (Server speichert nur den Hash des Tokens)
  *   GET  /v1/accounts/:syncId/records?since=<seq>&limit=<n>  → PullResponse
  *   POST /v1/accounts/:syncId/records  PushRequest           → PushResponse
  *   DELETE /v1/accounts/:syncId                              → 204
@@ -26,6 +27,17 @@ export const PROTOCOL_VERSION = 1;
 export const MAX_PUSH_RECORDS = 500;
 /** Höchstens so viele Zeichen verschlüsselte Daten pro Eintrag. */
 export const MAX_RECORD_DATA_LENGTH = 16_384;
+
+/** Antwort von GET /v1/info. */
+export interface ServerInfo {
+  name: string;
+  version: string;
+  protocol: number;
+  allowNewAccounts: boolean;
+  maxRecordsPerAccount: number;
+  /** Hinweis des Server-Betreibers, kann leer sein. */
+  message: string;
+}
 
 export interface EncryptedRecord {
   id: string;

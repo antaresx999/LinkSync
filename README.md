@@ -16,7 +16,7 @@ dessen Entwicklung eingestellt wurde. Danke an das xBrowserSync-Team für die Gr
 |---|---|
 | `packages/core` | Gemeinsamer Kern: Datenmodell, Verschlüsselung, Sync-Logik |
 | `apps/extension` | Browser-Erweiterung *(folgt)* |
-| `apps/server` | Sync-Server *(folgt)* |
+| `apps/server` | Sync-Server, siehe [docs/SERVER.md](docs/SERVER.md) |
 | `docs` | Planung und Dokumentation |
 
 Plan und Hintergründe: [docs/ANALYSE-UND-PLAN.md](docs/ANALYSE-UND-PLAN.md)
@@ -30,6 +30,7 @@ Voraussetzung: Node.js 24 oder neuer.
 corepack enable   # aktiviert pnpm (einmalig)
 pnpm install      # Abhängigkeiten installieren
 pnpm test         # alle Tests ausführen
+pnpm server       # Server lokal starten (http://localhost:8080)
 ```
 
 ## Lizenz

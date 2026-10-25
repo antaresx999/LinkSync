@@ -40,7 +40,7 @@ export class DecryptionError extends Error {
   }
 }
 
-/** Beide Schlüssel aus Sync-ID und Passwort ableiten. Dauert absichtlich etwa eine Sekunde. */
+/** Beide Schlüssel aus Sync-ID und Passwort ableiten. Ist absichtlich rechenintensiv, um Passwort-Raten zu bremsen. */
 export async function deriveKeys(
   syncId: string,
   password: string,

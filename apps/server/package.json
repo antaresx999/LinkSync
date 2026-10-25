@@ -1,0 +1,25 @@
+{
+  "name": "@linksync/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sync-Server von LinkSync. Speichert nur verschlüsselte Daten.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx scripts/smoke-test.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@linksync/core": "workspace:*",
+    "hono": "^4.13.13"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15"
+  }
+}

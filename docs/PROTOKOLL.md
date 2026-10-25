@@ -54,14 +54,17 @@ Anmeldung bei jedem Aufruf mit `Authorization: Bearer <Anmelde-Token>`.
 
 | Aufruf | Zweck |
 |---|---|
-| `POST /v1/accounts` `{ syncId, authTokenHash }` | Konto anlegen |
+| `GET /v1/info` | Name, Version und Einstellungen des Servers (ohne Anmeldung) |
+| `POST /v1/accounts` `{ syncId }` | Konto anlegen. Der Server speichert nur den Hash des mitgeschickten Tokens |
 | `GET /v1/accounts/:syncId/records?since=<seq>&limit=<n>` | Änderungen seit `seq` abholen |
 | `POST /v1/accounts/:syncId/records` `{ records: [{ id, baseSeq, data }] }` | Änderungen hochladen |
 | `DELETE /v1/accounts/:syncId` | Konto mit allen Daten löschen |
 
 - Der Server vergibt pro Konto eine fortlaufende Nummer `seq` für jede gespeicherte Fassung.
 - Beim Hochladen nennt das Gerät mit `baseSeq` die Fassung, die es zuletzt kannte. Hat der Server inzwischen eine neuere, meldet er einen **Konflikt**. Das Gerät holt dann ab, führt zusammen und lädt erneut hoch.
-- Grenzen: höchstens 500 Einträge pro Upload und 16 KB pro Eintrag.
+- Grenzen: höchstens 500 Einträge pro Upload, 16 KB pro Eintrag und (einstellbar) 50'000 Einträge pro Konto.
+- Einträge über 16 KB (z. B. Lesezeichen mit riesigen `data:`-URLs) bleiben nur lokal und werden gemeldet, statt den Sync zu blockieren.
+- Unbekanntes Konto und falsches Passwort ergeben dieselbe Antwort (401). So lässt sich nicht herausfinden, welche Sync-IDs existieren.
 
 ## Sync-Ablauf (`sync.ts`)
 
