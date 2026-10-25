@@ -15,8 +15,8 @@ jobs:
     name: Tests, Typprüfung, Build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - run: corepack enable
@@ -27,17 +27,20 @@ jobs:
         run: |
           pnpm --filter @linksync/extension zip:chrome
           pnpm --filter @linksync/extension zip:firefox
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: extension
           path: apps/extension/.output/*.zip
+          # .output beginnt mit einem Punkt und würde sonst übersprungen.
+          include-hidden-files: true
+          if-no-files-found: error
 
   e2e:
     name: Ende-zu-Ende in Firefox
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - run: corepack enable
@@ -67,14 +70,14 @@ jobs:
     env:
       IMAGE: ghcr.io/${{ github.repository_owner }}/linksync-server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
       - name: Image bauen (zum Testen)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/server/Dockerfile
@@ -89,7 +92,7 @@ jobs:
           docker logs ls
       - name: Bei GitHub anmelden
         if: github.event_name == 'push'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -97,7 +100,7 @@ jobs:
       - name: Tags festlegen
         if: github.event_name == 'push'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -106,7 +109,7 @@ jobs:
             type=sha,format=short
       - name: Image für amd64 und arm64 veröffentlichen
         if: github.event_name == 'push'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/server/Dockerfile
@@ -123,7 +126,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: extension
       - name: Release mit Erweiterungs-Paketen anlegen
