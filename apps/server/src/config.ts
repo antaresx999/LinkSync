@@ -3,6 +3,8 @@
 export interface Config {
   /** Port, auf dem der Server lauscht. Standard: 8080 */
   port: number;
+  /** Adresse, auf der der Server lauscht. "127.0.0.1" = nur lokal (hinter Reverse-Proxy). Standard: 0.0.0.0 */
+  host: string;
   /** Pfad zur Datenbankdatei. Standard: ./data/linksync.sqlite */
   databasePath: string;
   /** Dürfen neue Konten angelegt werden? Standard: true */
@@ -26,6 +28,7 @@ export interface Config {
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
   return {
     port: toInt(env.PORT, 8080, 1),
+    host: env.HOST || '0.0.0.0',
     databasePath: env.DATABASE_PATH ?? './data/linksync.sqlite',
     allowNewAccounts: toBool(env.ALLOW_NEW_ACCOUNTS, true),
     maxRecordsPerAccount: toInt(env.MAX_RECORDS_PER_ACCOUNT, 50_000, 1),

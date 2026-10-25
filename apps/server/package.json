@@ -11,7 +11,8 @@
     "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "smoke": "tsx scripts/smoke-test.ts"
+    "smoke": "tsx scripts/smoke-test.ts",
+    "package": "bash scripts/package.sh"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",

@@ -2,7 +2,77 @@
 
 Der Server speichert nur verschlüsselte Daten. Selbst wer Zugriff auf die Datenbank hat, kann keine Lesezeichen lesen.
 
-## Auf deinem Server (Docker)
+## Variante 1: Direkt unter Linux (ohne Docker)
+
+Für Debian, Ubuntu, Fedora, Raspberry Pi OS und andere Linux-Systeme mit systemd (x86_64, arm64, armv7).
+Das Skript bringt sein eigenes Node.js mit und richtet LinkSync als Dienst ein, der beim Systemstart automatisch läuft.
+
+### Installieren
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/antaresx999/LinkSync/main/deploy/install.sh | sudo bash
+```
+
+Das Skript
+- legt einen Systembenutzer `linksync` ohne Login an,
+- lädt Node.js 24 von nodejs.org und LinkSync von GitHub (beides mit Prüfsumme),
+- richtet den Dienst `linksync` ein (abgesichert: darf nur in sein Datenverzeichnis schreiben),
+- startet den Server auf `127.0.0.1:8080` – erreichbar nur lokal, für den Reverse-Proxy.
+
+| Was | Wo |
+|---|---|
+| Programm | `/opt/linksync/` |
+| Einstellungen | `/etc/linksync/linksync.env` |
+| Datenbank | `/var/lib/linksync/linksync.sqlite` |
+| Sicherungen | `/var/lib/linksync/backups/` (die 10 neuesten) |
+| Protokoll | `journalctl -u linksync` |
+
+### Verwalten
+
+| Befehl | Wirkung |
+|---|---|
+| `sudo linksync update` | neueste Version installieren – sichert vorher die Datenbank und kehrt automatisch zur alten Version zurück, falls die neue nicht startet |
+| `sudo linksync update --version v0.2.0` | bestimmte Version installieren |
+| `sudo linksync status` | Version, Zustand, ob ein Update verfügbar ist |
+| `sudo linksync logs` | Protokoll live ansehen (Beenden mit Ctrl-C) |
+| `sudo linksync backup` | Datenbank jetzt sichern |
+| `sudo linksync config` | Einstellungen bearbeiten, danach wird neu gestartet |
+| `sudo linksync uninstall` | entfernen; Daten und Einstellungen bleiben |
+| `sudo linksync uninstall --purge` | alles entfernen, auch alle Daten |
+
+### HTTPS davor
+
+Der Server lauscht nur lokal. Für den Zugriff von aussen braucht es einen Reverse-Proxy mit HTTPS.
+Am einfachsten mit **Caddy** (holt das Zertifikat automatisch):
+
+```bash
+sudo apt install caddy
+```
+
+In `/etc/caddy/Caddyfile`:
+```
+sync.example.com {
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+```bash
+sudo systemctl reload caddy
+```
+
+Für **nginx** siehe das Beispiel unten bei Variante 2A – es funktioniert genauso.
+
+### Wiederherstellen aus einer Sicherung
+
+```bash
+sudo systemctl stop linksync
+sudo cp /var/lib/linksync/backups/linksync-JJJJMMTT-HHMMSS.sqlite /var/lib/linksync/linksync.sqlite
+sudo rm -f /var/lib/linksync/linksync.sqlite-wal /var/lib/linksync/linksync.sqlite-shm
+sudo chown linksync:linksync /var/lib/linksync/linksync.sqlite
+sudo systemctl start linksync
+```
+
+## Variante 2: Mit Docker
 
 Voraussetzungen: Docker mit Compose-Plugin, eine Domain (z. B. `sync.example.com`), deren DNS-Eintrag auf den Server zeigt.
 
@@ -18,7 +88,7 @@ curl -fsSL https://raw.githubusercontent.com/antaresx999/LinkSync/main/deploy/.e
 
 `.env` öffnen und anpassen (mindestens `DOMAIN` bei Variante B).
 
-### 2a. Variante A – du hast schon einen Reverse-Proxy
+### 2a. Variante 2A – du hast schon einen Reverse-Proxy
 
 LinkSync lauscht nur lokal auf `127.0.0.1:8080`.
 
@@ -54,7 +124,7 @@ sync.example.com {
 
 > Wichtig: Der Proxy muss `X-Forwarded-For` setzen. Sonst sieht LinkSync alle Anfragen als von derselben Adresse kommend, und die Begrenzungen greifen für alle gemeinsam.
 
-### 2b. Variante B – kein Reverse-Proxy vorhanden
+### 2b. Variante 2B – kein Reverse-Proxy vorhanden
 
 Caddy wird mitgestartet und holt das HTTPS-Zertifikat automatisch. Ports 80 und 443 müssen frei und von aussen erreichbar sein.
 
@@ -88,7 +158,9 @@ docker compose exec linksync node -e "new (require('node:sqlite').DatabaseSync)(
 docker compose cp linksync:/data/backup.sqlite ./linksync-backup-$(date +%F).sqlite
 ```
 
-## Einstellungen (in `.env`)
+## Einstellungen
+
+Linux-Installation: `/etc/linksync/linksync.env` (bearbeiten mit `sudo linksync config`). Docker: `.env`.
 
 | Variable | Standard | Bedeutung |
 |---|---|---|
@@ -100,8 +172,9 @@ docker compose cp linksync:/data/backup.sqlite ./linksync-backup-$(date +%F).sql
 | `DELETE_INACTIVE_AFTER_DAYS` | `0` | Konten nach so vielen Tagen ohne Nutzung löschen (0 = nie). In der Datenschutzerklärung erwähnen! |
 | `TRUST_PROXY` | `false` (in den Compose-Dateien `true`) | `X-Forwarded-For` vom Reverse-Proxy vertrauen |
 | `SERVER_MESSAGE` | leer | Hinweis, den die Geräte anzeigen können |
-| `PORT` | `8080` | Port im Container |
-| `DATABASE_PATH` | `/data/linksync.sqlite` | Pfad zur Datenbank im Container |
+| `HOST` | `0.0.0.0` (Linux-Installation: `127.0.0.1`) | Adresse, auf der der Server lauscht |
+| `PORT` | `8080` | Port (1024 oder höher) |
+| `DATABASE_PATH` | `/data/linksync.sqlite` (Linux-Installation: `/var/lib/linksync/linksync.sqlite`) | Pfad zur Datenbank |
 
 ## Öffentlicher Betrieb – Checkliste
 

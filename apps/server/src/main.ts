@@ -20,8 +20,8 @@ cleanup();
 const cleanupTimer = setInterval(cleanup, DAY);
 cleanupTimer.unref();
 
-const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
-  console.log(`LinkSync-Server ${SERVER_VERSION} läuft auf http://localhost:${info.port}`);
+const server = serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
+  console.log(`LinkSync-Server ${SERVER_VERSION} läuft auf http://${config.host}:${info.port}`);
   console.log(`Datenbank: ${config.databasePath}`);
   console.log(`Neue Konten erlaubt: ${config.allowNewAccounts ? 'ja' : 'nein'}`);
   console.log(`Hinter Reverse-Proxy: ${config.trustProxy ? 'ja' : 'nein'}`);
@@ -30,7 +30,7 @@ const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   }
 });
 
-// Sauber beenden (z. B. bei Ctrl-C oder "docker stop").
+// Sauber beenden (z. B. bei Ctrl-C, "docker stop" oder "systemctl stop").
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     console.log('Server wird beendet …');

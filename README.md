@@ -26,7 +26,7 @@ dessen Entwicklung eingestellt wurde. Danke an das xBrowserSync-Team für die Gr
 | Thema | Datei |
 |---|---|
 | Erweiterung ausprobieren und nutzen | [docs/ERWEITERUNG.md](docs/ERWEITERUNG.md) |
-| Eigenen Server betreiben (Docker) | [docs/SERVER.md](docs/SERVER.md) |
+| Eigenen Server betreiben (Linux-Dienst oder Docker) | [docs/SERVER.md](docs/SERVER.md) |
 | Veröffentlichung auf Firefox Add-ons | [docs/FIREFOX-ADDONS.md](docs/FIREFOX-ADDONS.md) |
 | Datenschutz | [Deutsch](docs/DATENSCHUTZ.md) · [English](docs/PRIVACY.md) |
 | Sync-Protokoll und Verschlüsselung | [docs/PROTOKOLL.md](docs/PROTOKOLL.md) |

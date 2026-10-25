@@ -18,11 +18,12 @@ import {
   type PushRecord,
   type ServerInfo,
 } from '@linksync/core';
+import pkg from '../package.json' with { type: 'json' };
 import type { Config } from './config';
 import { RecordLimitError, type Database } from './db';
 import { RateLimiter } from './rate-limit';
 
-export const SERVER_VERSION = '0.1.0';
+export const SERVER_VERSION: string = pkg.version;
 const MAX_PULL_LIMIT = 1000;
 const SYNC_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const RECORD_ID = /^[A-Za-z0-9_-]{1,100}$/;
