@@ -48,7 +48,9 @@ pass "Server lauscht nur auf 127.0.0.1:8080"
 pass "Dienst läuft als eigener Benutzer"
 
 # Zweite Installation wird abgelehnt, statt etwas kaputt zu machen.
-bash "$INSTALL" install --file "$PACKAGE" 2>&1 | grep -q "bereits installiert" || fail "Doppelte Installation nicht erkannt"
+# Ausgabe erst vollständig einlesen: "grep -q" würde sonst die Pipe vorzeitig schliessen.
+output=$(bash "$INSTALL" install --file "$PACKAGE" 2>&1)
+grep -q "bereits installiert" <<<"$output" || fail "Doppelte Installation nicht erkannt"
 pass "Doppelte Installation erkannt"
 
 # --- Daten anlegen ---
@@ -71,7 +73,8 @@ pass "Update auf 9.9.1, Daten erhalten"
 [[ $(find /var/lib/linksync/backups -name 'linksync-*.sqlite' | wc -l) -ge 2 ]] || fail "Vor dem Update wurde nicht gesichert"
 pass "Vor dem Update automatisch gesichert"
 
-linksync update --file "$(variant 9.9.1)" | grep -q "bereits aktuell" || fail "Gleiche Version nicht erkannt"
+output=$(linksync update --file "$(variant 9.9.1)" 2>&1)
+grep -q "bereits aktuell" <<<"$output" || fail "Gleiche Version nicht erkannt"
 pass "Gleiche Version wird nicht neu installiert"
 
 # --- Misslungenes Update: zurück zur vorherigen Version ---
