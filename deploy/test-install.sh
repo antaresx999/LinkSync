@@ -68,7 +68,7 @@ linksync update --file "$(variant 9.9.1)"
 [[ $(cat /opt/linksync/app/VERSION) == 9.9.1 ]] || fail "Version nach Update falsch"
 api "http://127.0.0.1:8080/v1/accounts/$SYNC_ID/records" | grep -q '"r1"' || fail "Daten nach Update verloren"
 pass "Update auf 9.9.1, Daten erhalten"
-[[ $(ls /var/lib/linksync/backups/ | wc -l) -ge 2 ]] || fail "Vor dem Update wurde nicht gesichert"
+[[ $(find /var/lib/linksync/backups -name 'linksync-*.sqlite' | wc -l) -ge 2 ]] || fail "Vor dem Update wurde nicht gesichert"
 pass "Vor dem Update automatisch gesichert"
 
 linksync update --file "$(variant 9.9.1)" | grep -q "bereits aktuell" || fail "Gleiche Version nicht erkannt"

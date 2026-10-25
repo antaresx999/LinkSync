@@ -55,8 +55,9 @@ require_root() {
 }
 
 require_systemd() {
-  command -v systemctl >/dev/null && [[ -d /run/systemd/system ]] ||
+  if ! command -v systemctl >/dev/null || [[ ! -d /run/systemd/system ]]; then
     die "Dieses System nutzt kein systemd. Bitte die Docker-Variante verwenden (docs/SERVER.md)."
+  fi
 }
 
 require_tools() {
@@ -103,7 +104,7 @@ make_tmp() {
 }
 
 installed_version() {
-  [[ -f $PREFIX/app/VERSION ]] && cat "$PREFIX/app/VERSION" || echo ""
+  if [[ -f $PREFIX/app/VERSION ]]; then cat "$PREFIX/app/VERSION"; else echo ""; fi
 }
 
 # ---------- Node.js ----------
