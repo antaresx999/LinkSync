@@ -1,3 +1,4 @@
+export * from './backup';
 export * from './clock';
 export * from './crypto';
 export * from './http-client';
@@ -8,3 +9,4 @@ export * from './protocol';
 export * from './record';
 export * from './sync';
 export * from './tree';
+export * from './xbrowsersync';

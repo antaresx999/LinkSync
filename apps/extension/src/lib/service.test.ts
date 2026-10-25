@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { AuthError, MemoryServer, type SyncTransport } from '@linksync/core';
+import type { BrowserNode } from './bookmarks-api';
 import { FakeBookmarks } from './fake-bookmarks';
+import { setLanguage } from './i18n';
 import { SyncService, type ClientFactory, type ExtensionStorage, type StoredState } from './service';
 
 /** Speicher im Arbeitsspeicher statt browser.storage / IndexedDB. */
 function memoryStorage() {
   let state: StoredState | undefined;
   let key: CryptoKey | undefined;
-  const backups: unknown[] = [];
+  const backups: { createdAt: number; tree: BrowserNode[] }[] = [];
   const storage: ExtensionStorage = {
     loadState: async () => (state ? structuredClone(state) : undefined),
     saveState: async (s) => void (state = structuredClone(s)),
@@ -15,7 +17,8 @@ function memoryStorage() {
     loadKey: async () => key,
     saveKey: async (k) => void (key = k),
     clearKey: async () => void (key = undefined),
-    saveBackup: async (t) => void backups.push(t),
+    saveBackup: async (tree) => void backups.push({ createdAt: 1, tree: structuredClone(tree) }),
+    loadBackup: async () => backups.at(-1),
   };
   return { storage, backups };
 }
@@ -44,6 +47,8 @@ function makeService(factory: ClientFactory) {
   const service = new SyncService({ bookmarks, storage, clientFactory: factory, kdfIterations: 1000 });
   return { bookmarks, service, backups };
 }
+
+setLanguage('de');
 
 describe('SyncService', () => {
   it('legt ein Konto an, lädt hoch und ein zweiter Browser verbindet sich', async () => {
@@ -122,5 +127,76 @@ describe('SyncService', () => {
     await a.service.disconnect();
     expect(await a.service.status()).toEqual({ configured: false });
     expect(a.bookmarks.outline('1')).toEqual(['Bleibt']);
+  });
+});
+
+describe('SyncService – Suche, Sicherung, Import', () => {
+  async function ready() {
+    const factory = fakeServer();
+    const a = makeService(factory);
+    const news = await a.bookmarks.create({ parentId: '1', title: 'News' });
+    await a.bookmarks.create({ parentId: news.id, title: 'Neue Zürcher Zeitung', url: 'https://www.nzz.ch' });
+    await a.bookmarks.create({ parentId: '1', title: 'Heise online', url: 'https://www.heise.de' });
+    await a.bookmarks.create({ parentId: '2', title: 'Zeitplan', url: 'https://example.com/news' });
+    const status = await a.service.createAccount('http://localhost:8080', 'pw');
+    return { factory, a, syncId: status.configured ? status.syncId : '' };
+  }
+
+  it('findet Lesezeichen über Titel und Adresse, beste Treffer zuerst', async () => {
+    const { a } = await ready();
+    const results = await a.service.search('zeit');
+    expect(results.map((r) => r.title)).toEqual(['Zeitplan', 'Neue Zürcher Zeitung']);
+    expect(results[1]!.path).toEqual(['News']);
+    expect((await a.service.search('heise de')).map((r) => r.title)).toEqual(['Heise online']);
+    expect(await a.service.search('   ')).toEqual([]);
+  });
+
+  it('exportiert eine Sicherung und spielt sie auf einem anderen Gerät ein', async () => {
+    const { a, factory, syncId } = await ready();
+    const backup = await a.service.exportBackup();
+    expect(backup.format).toBe('linksync-backup');
+
+    // Alles löschen …
+    for (const id of ['News', 'Heise online']) await a.bookmarks.removeTree(a.bookmarks.findByTitle(id));
+    await a.service.sync();
+    expect(a.bookmarks.outline('1')).toEqual([]);
+
+    // … und auf Gerät B wiederherstellen.
+    const b = makeService(factory);
+    await b.service.connect('http://localhost:8080', syncId, 'pw');
+    const { result } = await b.service.importRoots(backup.roots, true);
+    expect(result).toMatchObject({ bookmarks: 3, folders: 1 });
+    expect(b.bookmarks.outline('1')).toEqual(['News/', ['Neue Zürcher Zeitung'], 'Heise online']);
+
+    await a.service.sync();
+    expect(a.bookmarks.outline('1')).toEqual(['News/', ['Neue Zürcher Zeitung'], 'Heise online']);
+  });
+
+  it('übernimmt beim Verbinden ersetzte Lesezeichen auf Wunsch zusätzlich', async () => {
+    const { factory, syncId } = await ready();
+    const b = makeService(factory);
+    await b.bookmarks.create({ parentId: '1', title: 'Nur auf B', url: 'https://nur-b.example' });
+    await b.bookmarks.create({ parentId: '1', title: 'Heise doppelt', url: 'https://www.heise.de' });
+    const status = await b.service.connect('http://localhost:8080', syncId, 'pw');
+    expect(status).toMatchObject({ connectBackupAt: 1 });
+    expect(b.bookmarks.outline('1')).not.toContain('Nur auf B');
+
+    const { result } = await b.service.restoreConnectBackup();
+    expect(result).toEqual({ bookmarks: 1, folders: 0, skipped: 1 });
+    expect(b.bookmarks.outline('1')).toContain('Nur auf B');
+  });
+
+  it('meldet xBrowserSync-Fehler verständlich', async () => {
+    const { factory } = await ready();
+    const b = makeService(factory);
+    const notFound = new SyncService({
+      bookmarks: b.bookmarks,
+      storage: memoryStorage().storage,
+      clientFactory: factory,
+      fetchFn: async () => new Response('{}', { status: 404 }),
+    });
+    await expect(notFound.importFromXbs('https://xbs.example', '0123456789abcdef0123456789abcdef', 'pw', false)).rejects.toThrow(
+      'gibt es auf dem xBrowserSync-Server nicht',
+    );
   });
 });

@@ -23,6 +23,16 @@ pnpm --filter @linksync/extension build
 
 Dann im Browser `chrome://extensions` öffnen → *Entwicklermodus* einschalten → *Entpackte Erweiterung laden* → Ordner `apps/extension/.output/chrome-mv3` wählen.
 
+## Funktionen
+
+- **Suche:** Im Popup oben ins Suchfeld tippen. Pfeiltasten + Enter öffnen ein Lesezeichen in einem neuen Tab. Gesucht wird in Titel und Adresse aller synchronisierten Lesezeichen – auch in denen, die dieser Browser nicht anzeigt (z. B. Firefox-Menü in Chrome).
+- **Sicherung & Import** (Link unten im Popup):
+  - *Sicherung herunterladen*: alle Lesezeichen als JSON-Datei (unverschlüsselt).
+  - *Sicherung einspielen*: LinkSync- oder xBrowserSync-Sicherungsdatei, wahlweise zusätzlich übernehmen oder alles ersetzen.
+  - *Von xBrowserSync umsteigen*: Lesezeichen direkt vom bisherigen xBrowserSync-Server holen (Sync-ID + Passwort). Beschreibungen, Tags und Trennlinien fallen weg.
+  - *Lesezeichen vor dem Verbinden*: die beim Verbinden ersetzten Lesezeichen zusätzlich übernehmen.
+- **Sprache:** Deutsch oder Englisch, je nach Sprache des Browsers.
+
 ## Wie es funktioniert
 
 | Wann wird synchronisiert? | |
@@ -34,18 +44,17 @@ Dann im Browser `chrome://extensions` öffnen → *Entwicklermodus* einschalten 
 
 Ein Sync-Durchgang: Browser mit LinkSync vergleichen → mit Server abgleichen → Browser anpassen. Weil jedes Mal der ganze Browser verglichen wird, gehen auch Änderungen nicht verloren, die bei ausgeschalteter Erweiterung gemacht wurden.
 
-**Beim Verbinden mit einem bestehenden Konto** werden die Lesezeichen dieses Browsers durch die synchronisierten ersetzt. Vorher wird eine Sicherung im Speicher der Erweiterung abgelegt (Wiederherstellen folgt in Phase 4).
+**Beim Verbinden mit einem bestehenden Konto** werden die Lesezeichen dieses Browsers durch die synchronisierten ersetzt. Vorher wird eine Sicherung im Speicher der Erweiterung abgelegt; sie lässt sich unter *Sicherung & Import* zusätzlich übernehmen.
 
-## Einschränkungen (Stand Phase 3)
+## Einschränkungen
 
 - **Chrome hat kein Lesezeichenmenü.** Lesezeichen aus dem Firefox-Menü bleiben erhalten, erscheinen in Chrome aber nicht.
 - **Trennlinien** (nur Firefox) werden nicht synchronisiert und können nach einem Sync an das Ende eines Ordners rutschen.
 - **Firefox-Abfragen** wie „Meistbesucht" (`place:`-Adressen) werden nicht synchronisiert.
-- Die Oberfläche ist vorerst nur auf Deutsch.
 
 ## Tests
 
 ```bash
 pnpm --filter @linksync/extension test          # Abgleich mit simuliertem Chrome/Firefox
-pnpm --filter @linksync/extension e2e:firefox   # zwei echte Firefox-Instanzen (Server muss laufen)
+pnpm --filter @linksync/extension e2e:firefox   # zwei echte Firefox-Instanzen inkl. Suche und xBrowserSync-Übernahme (Server muss laufen)
 ```

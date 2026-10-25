@@ -13,7 +13,7 @@ import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
 import type { BookmarksApi } from '../lib/bookmarks-api';
 import { browserStorage } from '../lib/browser-storage';
-import type { Request, Response } from '../lib/messages';
+import type { Reply, Request } from '../lib/messages';
 import { SyncService, type Status } from '../lib/service';
 
 const ALARM = 'linksync-sync';
@@ -63,14 +63,19 @@ export default defineBackground(() => {
 
   // Anfragen vom Popup.
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    handle(message as Request).then(
-      (status): Response => (updateBadge(status), { ok: true, status }),
-      (err): Response => ({ ok: false, error: err instanceof Error ? err.message : String(err) }),
-    ).then(sendResponse);
+    handle(message as Request)
+      .then(
+        (value): Reply => ({ ok: true, value }),
+        (err): Reply => ({ ok: false, error: err instanceof Error ? err.message : String(err) }),
+      )
+      .then(async (reply) => {
+        updateBadge(await service.status());
+        sendResponse(reply);
+      });
     return true; // Antwort kommt später
   });
 
-  function handle(request: Request): Promise<Status> {
+  async function handle(request: Request): Promise<unknown> {
     switch (request.type) {
       case 'status':
         return service.status();
@@ -82,6 +87,16 @@ export default defineBackground(() => {
         return service.sync();
       case 'disconnect':
         return service.disconnect();
+      case 'search':
+        return service.search(request.query);
+      case 'exportBackup':
+        return service.exportBackup();
+      case 'import':
+        return (await service.importRoots(request.roots, request.replace)).result;
+      case 'importXbs':
+        return (await service.importFromXbs(request.serviceUrl, request.syncId, request.password, request.replace)).result;
+      case 'restoreConnectBackup':
+        return (await service.restoreConnectBackup()).result;
     }
   }
 

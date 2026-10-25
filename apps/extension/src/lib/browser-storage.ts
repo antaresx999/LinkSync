@@ -9,7 +9,7 @@
 import { createStore, del, get, set } from 'idb-keyval';
 import { browser } from 'wxt/browser';
 import type { BrowserNode } from './bookmarks-api';
-import type { ExtensionStorage, StoredState } from './service';
+import type { BrowserBackup, ExtensionStorage, StoredState } from './service';
 
 const STATE_KEY = 'linksync:state';
 const BACKUP_KEY = 'linksync:backup';
@@ -32,6 +32,10 @@ export function browserStorage(): ExtensionStorage {
     clearKey: () => del('encryptionKey', keyStore),
     async saveBackup(tree: BrowserNode[]) {
       await browser.storage.local.set({ [BACKUP_KEY]: { createdAt: Date.now(), tree } });
+    },
+    async loadBackup() {
+      const result = await browser.storage.local.get(BACKUP_KEY);
+      return result[BACKUP_KEY] as BrowserBackup | undefined;
     },
   };
 }
