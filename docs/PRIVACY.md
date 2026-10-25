@@ -2,63 +2,53 @@
 
 *Deutsche Version: [DATENSCHUTZ.md](DATENSCHUTZ.md)*
 
-Last updated: [DATE]
-
-> **Note for the operator:** Fill in everything in square brackets [ … ] before publishing. This policy describes how the software behaves; it is not legal advice.
+Last updated: 25 October 2026
 
 ## 1. Controller
 
-[NAME / COMPANY]
-[ADDRESS]
-[EMAIL]
+Andreas Franz
+Email: andreas.franz@bluemail.ch
 
-The extension has **no built-in server**. It only sends data to the server whose address you enter yourself. The operator of that server is responsible for the data stored there – for your own server, that is you.
+responsible for the LinkSync browser extension.
 
-[ONLY IF YOU OPERATE A SERVER FOR OTHERS: The controller for the sync server at **[DOMAIN]** is the party named above.]
+The extension has **no built-in server** and the developer does not operate a server for users. The extension only sends data to the server whose address you enter yourself. The operator of that server is responsible for the data stored there – for your own server, that is you.
 
 ## 2. Principle: end-to-end encryption
 
-LinkSync encrypts your bookmarks **on your device** before they leave the browser. The key is derived from your password. Neither the password nor the key is **ever** sent to the server. The operator therefore cannot read your bookmarks – not even if ordered to by authorities.
+LinkSync encrypts your bookmarks **on your device** before they leave the browser. The key is derived from your password. Neither the password nor the key is **ever** sent to the server. A server operator therefore cannot read your bookmarks.
 
 ## 3. What the browser extension processes
 
-- **Bookmarks** (title, address, folder structure): locally in the browser; encrypted to the server you choose.
+- **Bookmarks** (title, address, folder structure): locally in the browser; encrypted to the server you entered.
 - **Settings and sync state** (server address, sync ID, auth token, encryption key): only locally in the extension's storage. The key is stored as a non-exportable key.
 - **Backup before connecting:** When connecting to an existing account, a copy of the previous bookmarks is stored locally in the extension.
 - **Switching from xBrowserSync:** Only when you trigger it, the extension fetches your encrypted data from the xBrowserSync server you specify and decrypts it locally.
 
-The extension contains **no** advertising, **no** analytics or tracking, and sends no data to third parties.
+The extension contains **no** advertising, **no** analytics or tracking, and sends no data to the developer or to third parties.
 
-## 4. What the sync server stores
+## 4. What a LinkSync server stores
 
-| Data | Purpose | Retention |
-|---|---|---|
-| Sync ID (random identifier) | Linking data to your account | until the account is deleted |
-| Hash of the auth token | Checking whether a device may write | until the account is deleted |
-| Encrypted entries with version number | Synchronisation | until the account is deleted or the entry changes |
-| Time of creation and last use | Operation, optional clean-up of unused accounts | until the account is deleted |
+The server software (also open source) stores:
 
-Neither the password nor the encryption key can be derived from the auth token.
+| Data | Purpose |
+|---|---|
+| Sync ID (random identifier) | Linking data to your account |
+| Hash of the auth token | Checking whether a device may write |
+| Encrypted entries with version number | Synchronisation |
+| Time of creation and last use | Operation, optional clean-up of unused accounts |
 
-**IP addresses** are used by the LinkSync server only briefly in memory to limit abuse (requests per minute, new accounts per hour). They are not stored.
-[IF APPLICABLE: The web server/reverse proxy in front logs requests including IP addresses for [NUMBER] days for troubleshooting and attack prevention.]
-
-[IF DELETE_INACTIVE_AFTER_DAYS IS SET: Accounts not used for [NUMBER] days are deleted automatically.]
+Neither the password nor the encryption key can be derived from the auth token. The server software uses IP addresses only briefly in memory to limit abuse; it does not store them. Information on logs, retention and location is provided by the operator of the respective server.
 
 ## 5. Legal basis
 
-Processing to provide the service you requested (Art. 6(1)(b) GDPR) and under the Swiss Federal Act on Data Protection (FADP); abuse prevention based on legitimate interest (Art. 6(1)(f) GDPR).
+Processing to provide the function you requested (Art. 6(1)(b) GDPR) and under the Swiss Federal Act on Data Protection (FADP).
 
 ## 6. Your rights and deletion
 
-- **Delete yourself:** In the extension under *Backup & import → Delete account*, your account and all data are removed from the server immediately.
-- You have the right to access, rectification, erasure, and to lodge a complaint with a data protection authority.
-- As the operator cannot decrypt your data, information can only be given about the data listed in section 4.
+- **Delete data on the server:** In the extension under *Backup & import → Delete account*, your account and all data are removed from the server immediately.
+- **Delete local data:** *Disconnect* or remove the extension.
+- You have the right to access, rectification, erasure, and to lodge a complaint with a data protection authority. Questions about the extension: andreas.franz@bluemail.ch
 
-## 7. Hosting
-
-The server is hosted at [PROVIDER / OWN SERVER], location [COUNTRY].
-
-## 8. Source code
+## 7. Source code
 
 LinkSync is open source (GPL-3.0). The properties described here can be verified in the source code: https://github.com/antaresx999/LinkSync

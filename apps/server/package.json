@@ -1,6 +1,6 @@
 {
   "name": "@linksync/server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Sync-Server von LinkSync. Speichert nur verschlüsselte Daten.",
   "license": "GPL-3.0-only",

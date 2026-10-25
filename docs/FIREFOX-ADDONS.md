@@ -3,7 +3,7 @@
 ## Vorbereitung (einmalig)
 
 1. Konto anlegen: https://addons.mozilla.org → *Anmelden* (Mozilla-Konto).
-2. Datenschutzerklärung ausfüllen: [DATENSCHUTZ.md](DATENSCHUTZ.md) / [PRIVACY.md](PRIVACY.md) – alle `[ … ]`-Stellen.
+2. Datenschutzerklärung: [DATENSCHUTZ.md](DATENSCHUTZ.md) / [PRIVACY.md](PRIVACY.md) – Text bei Mozilla ins Feld *Datenschutzerklärung* kopieren.
 
 Die Erweiterung hat **keinen voreingestellten Server**: Nutzer tragen die Adresse ihres eigenen (oder eines vertrauten) LinkSync-Servers selbst ein.
 
@@ -31,6 +31,15 @@ https://addons.mozilla.org/developers/addon/submit/distribution
 5. *Hinweise für Prüfer*: Text unten einfügen.
 
 Die Prüfung dauert meist wenige Stunden bis einige Tage.
+
+### Von „selbst verteilt" in den Store wechseln
+
+Jede Versionsnummer lässt sich nur **einmal** hochladen. Ist eine Version schon selbst verteilt signiert, braucht es für den Store eine neue Versionsnummer:
+
+1. Neue Version veröffentlichen (Versionsnummer in `apps/extension/package.json` erhöhen, Versionsmarke `v…` setzen – GitHub baut die ZIPs).
+2. Im Developer Hub das Add-on öffnen → *Neue Version hochladen* → Vertrieb **„Auf dieser Website"**.
+3. Erweiterungs- und Quellcode-ZIP hochladen, dann die Store-Angaben ausfüllen (Texte unten).
+4. Falls der Store nicht angeboten wird: *Status & Versionen verwalten* → Sichtbarkeit **„Sichtbar"**.
 
 ## Store-Texte
 
